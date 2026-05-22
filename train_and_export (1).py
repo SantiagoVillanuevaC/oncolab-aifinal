@@ -38,7 +38,7 @@ print("  ONCOLAB AI — Entrenamiento Random Forest")
 print(f"{'='*60}\n")
 
 if not os.path.exists(DATASET_PATH):
-    raise FileNotFoundError(f"❌ No se encontró '{DATASET_PATH}'")
+    raise FileNotFoundError(f"No se encontró '{DATASET_PATH}'")
 
 df = pd.read_csv(DATASET_PATH)
 
@@ -103,7 +103,7 @@ for feat, imp in sorted(zip(FEATURES, importancias), key=lambda x: -x[1]):
     barra = '█' * int(imp * 40)
     print(f"  {feat:<30} {imp:.4f}  {barra}")
 
-# ── PASO 7: Exportar modelos ──────────────────────────────────────────
+
 joblib.dump(scaler, SCALER_PATH)
 joblib.dump(modelo, MODEL_PATH)
 
