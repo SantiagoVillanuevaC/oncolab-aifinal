@@ -1,0 +1,288 @@
+{% extends "core/base.html" %}
+{% block title %}Historial de Pacientes — OncoLab AI{% endblock %}
+{% block nav_historial %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.historial-header-card { background: linear-gradient(135deg, #0D47A1, #1E88E5); border-radius: 16px; padding: 1.8rem 2rem; color: #fff; margin-bottom: 1.8rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; box-shadow: 0 6px 28px rgba(13,71,161,.28); }
+.historial-header-icon { width: 60px; height: 60px; background: rgba(255,255,255,.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; flex-shrink: 0; }
+.historial-header-info h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin: 0 0 .3rem; }
+.historial-header-info p { font-size: 0.85rem; color: rgba(255,255,255,.75); margin: 0; }
+.stat-item { text-align: center; background: rgba(255,255,255,.15); border-radius: 12px; padding: .7rem 1.2rem; border: 1px solid rgba(255,255,255,.2); }
+.stat-num { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; display: block; line-height: 1; }
+.stat-lbl { font-size: 0.68rem; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+.historial-stats { margin-left: auto; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* Gráficas */
+.graficas-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; margin-bottom: 1.8rem; }
+.grafica-card { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 14px; box-shadow: var(--sombra-card); padding: 1.4rem; }
+.grafica-titulo { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--texto-principal); margin: 0 0 1rem; display: flex; align-items: center; gap: 8px; }
+.grafica-titulo i { color: var(--azul-medico); }
+.chart-container { position: relative; height: 220px; }
+
+/* Barra de porcentaje */
+.pct-bar-wrap { margin-top: 1rem; }
+.pct-label { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; margin-bottom: 5px; }
+.pct-bar { height: 10px; border-radius: 10px; background: var(--gris-borde); overflow: hidden; }
+.pct-bar-fill-verde { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #2E7D32, #66BB6A); transition: width 1s ease; }
+.pct-bar-fill-rojo  { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #C62828, #EF5350); transition: width 1s ease; }
+
+/* Tabla */
+.tabla-wrapper { background: var(--blanco); border: 1px solid var(--gris-borde); border-radius: 14px; box-shadow: var(--sombra-card); overflow: hidden; }
+.tabla-toolbar { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--gris-borde); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .8rem; background: #F8FAFF; }
+.tabla-toolbar h5 { font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--texto-principal); }
+.tabla-toolbar h5 i { color: var(--azul-medico); }
+.table-oncolab { margin: 0; font-size: .88rem; }
+.table-oncolab thead th { background: #F8FAFF; color: var(--texto-secundario); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; border-bottom: 2px solid var(--gris-borde); padding: .85rem 1.2rem; white-space: nowrap; }
+.table-oncolab tbody td { padding: .9rem 1.2rem; vertical-align: middle; border-bottom: 1px solid #F0F2F5; color: var(--texto-principal); }
+.table-oncolab tbody tr:last-child td { border-bottom: none; }
+.table-oncolab tbody tr:hover td { background: #F8FAFF; }
+.badge-benigno { background: #E8F5E9; color: #2E7D32; font-size: .74rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #A5D6A7; display: inline-flex; align-items: center; gap: 5px; }
+.badge-maligno { background: #FFEBEE; color: #C62828; font-size: .74rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid #EF9A9A; display: inline-flex; align-items: center; gap: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+#** Breadcrumb 
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb breadcrumb-oncolab">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fa-solid fa-house me-1"></i>Dashboard</a></li>
+        <li class="breadcrumb-item active">Historial de Pacientes</li>
+    </ol>
+</nav>
+
+<!-- Header -->
+<div class="historial-header-card">
+    <div class="historial-header-icon"><i class="fa-solid fa-folder-open"></i></div>
+    <div class="historial-header-info">
+        <h2>Historial de Diagnósticos</h2>
+        <p>Registro completo de análisis realizados por el sistema OncoLab AI</p>
+    </div>
+    <div class="historial-stats">
+        <div class="stat-item">
+            <span class="stat-num">{{ total|default:"0" }}</span>
+            <span class="stat-lbl">Total</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num" style="color:#A5D6A7;">{{ total_benignos|default:"0" }}</span>
+            <span class="stat-lbl">Benignos</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num" style="color:#EF9A9A;">{{ total_malignos|default:"0" }}</span>
+            <span class="stat-lbl">Malignos</span>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICAS -->
+{% if total > 0 %}
+<div class="graficas-row">
+
+    <!-- Gráfica 1: Dona Benigno vs Maligno -->
+    <div class="grafica-card">
+        <p class="grafica-titulo"><i class="fa-solid fa-chart-pie"></i> Distribución de Diagnósticos</p>
+        <div class="chart-container">
+            <canvas id="graficaDona"></canvas>
+        </div>
+    </div>
+
+    <!-- Gráfica 2: Barras por resultado -->
+    <div class="grafica-card">
+        <p class="grafica-titulo"><i class="fa-solid fa-chart-bar"></i> Comparativa Benigno / Maligno</p>
+        <div class="chart-container">
+            <canvas id="graficaBarras"></canvas>
+        </div>
+        <!-- Barras de porcentaje -->
+        <div class="pct-bar-wrap">
+            <div class="pct-label">
+                <span style="color:#2E7D32;"><i class="fa-solid fa-circle-check me-1"></i>Benigno</span>
+                <span style="color:#2E7D32;">{{ pct_benigno|default:"0" }}%</span>
+            </div>
+            <div class="pct-bar mb-2"><div class="pct-bar-fill-verde" style="width:{{ pct_benigno|default:'0' }}%;"></div></div>
+            <div class="pct-label">
+                <span style="color:#C62828;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Maligno</span>
+                <span style="color:#C62828;">{{ pct_maligno|default:"0" }}%</span>
+            </div>
+            <div class="pct-bar"><div class="pct-bar-fill-rojo" style="width:{{ pct_maligno|default:'0' }}%;"></div></div>
+        </div>
+    </div>
+
+    <!-- Gráfica 3: Prevalencia de cáncer -->
+    <div class="grafica-card">
+        <p class="grafica-titulo"><i class="fa-solid fa-heart-pulse"></i> Prevalencia de Cáncer de Mama</p>
+        <div class="chart-container">
+            <canvas id="graficaPrevalencia"></canvas>
+        </div>
+        <p style="font-size:0.75rem; color:var(--texto-secundario); margin-top:0.8rem; text-align:center;">
+            Basado en los diagnósticos del sistema. {{ pct_maligno|default:"0" }}% de los pacientes analizados presentaron indicios de malignidad.
+        </p>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- Tabla historial -->
+<div class="tabla-wrapper">
+    <div class="tabla-toolbar">
+        <h5><i class="fa-solid fa-list-check"></i> Todos los Diagnósticos</h5>
+        <a href="{% url 'nuevo_diagnostico' %}" class="btn btn-primary btn-sm" style="border-radius:8px; font-weight:600; font-size:.82rem;">
+            <i class="fa-solid fa-plus me-1"></i> Nuevo Diagnóstico
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-oncolab">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fecha y Hora</th>
+                    <th>ID Paciente</th>
+                    <th>Resultado</th>
+                    <th>Modelo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for diag in diagnosticos %}
+                <tr>
+                    <td style="color:#9E9E9E; font-size:.82rem;">{{ forloop.counter }}</td>
+                    <td><span style="font-weight:600;">{{ diag.fecha }}</span></td>
+                    <td><code style="background:#F0F4FF; color:#1565C0; padding:3px 8px; border-radius:5px; font-size:.82rem;">#{{ diag.id_paciente }}</code></td>
+                    <td>
+                        {% if diag.resultado == "Benigno" %}
+                            <span class="badge-benigno"><i class="fa-solid fa-circle-check"></i> Benigno</span>
+                        {% else %}
+                            <span class="badge-maligno"><i class="fa-solid fa-triangle-exclamation"></i> Maligno</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:.8rem; color:var(--texto-secundario);"><i class="fa-solid fa-brain me-1" style="color:var(--azul-medico);"></i>Muestra procesada</td>
+                    <td>
+                        <a href="{% url 'resultado' diag.id %}" class="btn btn-outline-primary btn-sm" style="border-radius:7px; font-size:.78rem; font-weight:600;">
+                            <i class="fa-solid fa-eye"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:3rem; color:var(--texto-secundario);">
+                        <i class="fa-solid fa-folder-open d-block mb-3" style="font-size:3rem; color:var(--gris-borde);"></i>
+                        <p style="font-weight:600; margin-bottom:.4rem;">Sin diagnósticos registrados</p>
+                        <a href="{% url 'nuevo_diagnostico' %}" class="btn btn-ia mt-2">
+                            <i class="fa-solid fa-microscope me-2"></i> Realizar Primer Diagnóstico
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if total > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const benignos = {{ total_benignos|default:0 }};
+const malignos = {{ total_malignos|default:0 }};
+const total    = {{ total|default:0 }};
+
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#546E7A';
+
+// ── Gráfica 1: Dona ──────────────────────────────────────
+new Chart(document.getElementById('graficaDona'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Benigno', 'Maligno'],
+        datasets: [{
+            data: [benignos, malignos],
+            backgroundColor: ['#2E7D32', '#C62828'],
+            borderColor: ['#fff', '#fff'],
+            borderWidth: 3,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ` ${ctx.label}: ${ctx.parsed} paciente(s) (${Math.round(ctx.parsed/total*100)}%)`
+                }
+            }
+        }
+    }
+});
+
+// ── Gráfica 2: Barras ────────────────────────────────────
+new Chart(document.getElementById('graficaBarras'), {
+    type: 'bar',
+    data: {
+        labels: ['Benigno', 'Maligno'],
+        datasets: [{
+            label: 'Número de pacientes',
+            data: [benignos, malignos],
+            backgroundColor: ['rgba(46,125,50,0.85)', 'rgba(198,40,40,0.85)'],
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: 'rgba(0,0,0,0.06)' }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// ── Gráfica 3: Prevalencia (gauge-style horizontal) ──────
+new Chart(document.getElementById('graficaPrevalencia'), {
+    type: 'bar',
+    data: {
+        labels: ['Sin cáncer (Benigno)', 'Con cáncer (Maligno)'],
+        datasets: [{
+            label: 'Pacientes',
+            data: [benignos, malignos],
+            backgroundColor: [
+                'rgba(21,101,192,0.8)',
+                'rgba(198,40,40,0.85)'
+            ],
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ` ${ctx.parsed.x} paciente(s) — ${Math.round(ctx.parsed.x/total*100)}%`
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: 'rgba(0,0,0,0.06)' }
+            },
+            y: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
