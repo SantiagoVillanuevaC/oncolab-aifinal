@@ -51,7 +51,6 @@
     </ol>
 </nav>
 
-<!-- Header -->
 <div class="historial-header-card">
     <div class="historial-header-icon"><i class="fa-solid fa-folder-open"></i></div>
     <div class="historial-header-info">
@@ -73,8 +72,7 @@
         </div>
     </div>
 </div>
-
-<!-- GRÁFICAS -->
+# Grafica
 {% if total > 0 %}
 <div class="graficas-row">
 
@@ -86,7 +84,6 @@
         </div>
     </div>
 
-    <!-- Gráfica 2: Barras por resultado -->
     <div class="grafica-card">
         <p class="grafica-titulo"><i class="fa-solid fa-chart-bar"></i> Comparativa Benigno / Maligno</p>
         <div class="chart-container">
@@ -107,7 +104,7 @@
         </div>
     </div>
 
-    <!-- Gráfica 3: Prevalencia de cáncer -->
+    # Gráfica 3
     <div class="grafica-card">
         <p class="grafica-titulo"><i class="fa-solid fa-heart-pulse"></i> Prevalencia de Cáncer de Mama</p>
         <div class="chart-container">
@@ -120,8 +117,6 @@
 
 </div>
 {% endif %}
-
-<!-- Tabla historial -->
 <div class="tabla-wrapper">
     <div class="tabla-toolbar">
         <h5><i class="fa-solid fa-list-check"></i> Todos los Diagnósticos</h5>
@@ -189,7 +184,7 @@ const total    = {{ total|default:0 }};
 Chart.defaults.font.family = "'DM Sans', sans-serif";
 Chart.defaults.color = '#546E7A';
 
-// ── Gráfica 1: Dona ──────────────────────────────────────
+// ── Gráfica 1
 new Chart(document.getElementById('graficaDona'), {
     type: 'doughnut',
     data: {
@@ -217,7 +212,7 @@ new Chart(document.getElementById('graficaDona'), {
     }
 });
 
-// ── Gráfica 2: Barras ────────────────────────────────────
+// ── Gráfica 2
 new Chart(document.getElementById('graficaBarras'), {
     type: 'bar',
     data: {
@@ -245,7 +240,7 @@ new Chart(document.getElementById('graficaBarras'), {
     }
 });
 
-// ── Gráfica 3: Prevalencia (gauge-style horizontal) ──────
+// ── Gráfica 3
 new Chart(document.getElementById('graficaPrevalencia'), {
     type: 'bar',
     data: {
